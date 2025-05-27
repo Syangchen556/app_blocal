@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth as getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { auth } from 'next-auth';
+
 import { connectDB } from '@/lib/mongodb';
 import Shop from '@/models/Shop';
 import Product from '@/models/Product';
@@ -9,7 +9,7 @@ import Order from '@/models/Order';
 // GET /api/shops/me - Get seller's own shop
 export async function GET(request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -64,7 +64,7 @@ export async function GET(request) {
 // PUT /api/shops/me - Update seller's own shop
 export async function PUT(request) {
   try {
-    const session = await getServerSession();
+    const session = await auth();
     
     if (!session) {
       return NextResponse.json(
@@ -133,7 +133,7 @@ export async function PUT(request) {
 // Create or update my shop
 export async function POST(req) {
   try {
-    const session = await getServerSession();
+    const session = await auth();
     
     if (!session) {
       return NextResponse.json(
@@ -206,7 +206,7 @@ export async function POST(req) {
 // Delete my shop
 export async function DELETE(req) {
   try {
-    const session = await getServerSession();
+    const session = await auth();
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },

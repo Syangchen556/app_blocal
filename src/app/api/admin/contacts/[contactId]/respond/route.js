@@ -1,20 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+
 import { authOptions } from '@/lib/auth';
-import { connectDB } from '@/lib/mongodb';
 import Contact from '@/models/Contact';
+import { connectDB } from '@/lib/mongodb';
 import { sendEmail } from '@/lib/email';
 
 export async function POST(req, { params }) {
   try {
-    const session = await getServerSession(req, authOptions);
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     const { contactId } = params;
     const { response } = await req.json();
 

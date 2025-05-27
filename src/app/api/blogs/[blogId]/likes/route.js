@@ -1,13 +1,19 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+
+import { auth } from 'next-auth';
+
 import { connectDB } from '@/lib/mongodb';
 import Blog from '@/models/Blog';
 import User from '@/models/User';
 
 // POST /api/blogs/[blogId]/likes - Toggle like on a blog
 export async function POST(request, { params }) {
+  const session = await auth();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
-    const session = await getServerSession(request, authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -65,7 +71,7 @@ export async function POST(request, { params }) {
 // GET /api/blogs/[blogId]/likes - Check if user has liked
 export async function GET(request, { params }) {
   try {
-    const session = await getServerSession(request, authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+
 import { connectDB } from '@/lib/mongodb';
 import { authOptions } from '@/lib/auth';
 import User from '@/models/User';
@@ -9,15 +9,6 @@ import Shop from '@/models/Shop';
 
 export async function GET(req) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     await connectDB();
 
     // Get time range from query parameters

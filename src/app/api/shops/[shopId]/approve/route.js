@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth as getServerSession } from 'next-auth';
+import { auth } from 'next-auth';
 import { connectDB } from '@/lib/mongodb';
 import Shop from '@/models/Shop';
 import User from '@/models/User';
@@ -7,7 +7,7 @@ import User from '@/models/User';
 // PATCH /api/shops/[shopId]/approve - Approve or reject a shop
 export async function PUT(request, { params }) {
   try {
-    const session = await getServerSession();
+    const session = await auth();
     
     // Check if user is admin
     if (!session || session.user.role !== 'ADMIN') {

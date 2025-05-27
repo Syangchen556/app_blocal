@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
-import { auth as getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { auth } from 'next-auth';
+
 import { connectDB } from '@/lib/mongodb';
 import Order from '@/models/Order';
 import Shop from '@/models/Shop';
 
 export async function PUT(request, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
