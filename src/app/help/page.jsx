@@ -20,11 +20,11 @@ const FAQs = [
     items: [
       {
         question: "How do I track my order?",
-        answer: "You can track your order by going to 'My Orders' in your account dashboard. There you'll find all your orders and their current status. You'll receive email notifications for status updates."
+        answer: "You can track your order by going to 'My Orders' in your account dashboard. There you&apos;ll find all your orders and their current status. You&apos;ll receive email notifications for status updates."
       },
       {
         question: "Can I cancel an order after placing it?",
-        answer: "Yes, you can cancel your order if it hasn't been shipped yet. Go to 'My Orders' and look for the cancel option next to eligible orders. Orders that have already been processed cannot be cancelled."
+        answer: "Yes, you can cancel your order if it hasn&apos;t been shipped yet. Go to 'My Orders' and look for the cancel option next to eligible orders. Orders that have already been processed cannot be cancelled."
       },
       {
         question: "How do I modify my order?",
@@ -58,7 +58,7 @@ const FAQs = [
       },
       {
         question: "Do you ship internationally?",
-        answer: "Currently, we only ship within Bhutan. We're working on expanding our shipping options to other countries."
+        answer: "Currently, we only ship within Bhutan. We&apos;re working on expanding our shipping options to other countries."
       },
       {
         question: "How much does shipping cost?",

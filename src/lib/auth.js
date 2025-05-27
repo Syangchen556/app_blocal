@@ -2,6 +2,28 @@ import bcrypt from 'bcryptjs';
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { MongoClient } from 'mongodb';
+import { getServerSession } from 'next-auth/next';
+
+// Authentication utilities for API routes
+export const auth = {
+  // Check if user is authenticated
+  isAuthenticated: async (request) => {
+    const session = await getServerSession(request, null, authOptions);
+    return !!session?.user;
+  },
+  
+  // Check if user has admin role
+  isAdmin: async (request) => {
+    const session = await getServerSession(request, null, authOptions);
+    return session?.user?.role === 'ADMIN';
+  },
+  
+  // Get current user information
+  getCurrentUser: async (request) => {
+    const session = await getServerSession(request, null, authOptions);
+    return session?.user || null;
+  }
+};
 
 // Auth configuration that can be used with NextAuth v4
 export const authOptions = {
