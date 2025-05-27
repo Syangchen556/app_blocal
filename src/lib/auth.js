@@ -2,7 +2,6 @@ import bcrypt from 'bcryptjs';
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { MongoClient } from 'mongodb';
-import { getServerSession as nextAuthGetServerSession } from "next-auth/next";
 
 // Auth configuration that can be used with NextAuth v4
 export const authOptions = {
@@ -164,10 +163,16 @@ export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET || 'dev-secret',
 };
 
-// NextAuth v4 default export
-export default NextAuth(authOptions);
+// Create the auth handlers for Next.js App Router
+export const handlers = NextAuth(authOptions);
 
-// Helper function for getServerSession that works with Next.js API routes
-export const getServerSession = async (req, res, options = authOptions) => {
-  return await nextAuthGetServerSession(req, res, options);
-};
+// Helper function to get the server session
+export async function getServerSession() {
+  const request = new Request('http://localhost');
+  const response = new Response();
+  
+  // Create a minimal request context
+  const ctx = { req: request, res: response };
+  
+  return await handlers.session(ctx);
+}
