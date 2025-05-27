@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { auth as getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import connectDB from '@/lib/db';
+import { connectDB } from '@/lib/mongodb';
 import Shop from '@/models/Shop';
 import Product from '@/models/Product';
 import Order from '@/models/Order';

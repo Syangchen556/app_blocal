@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import connectDB from '@/lib/mongodb';
+import { auth as getServerSession } from 'next-auth';
+import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import Shop from '@/models/Shop';
 import { sendEmail } from '@/lib/email';

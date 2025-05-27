@@ -7,7 +7,7 @@ import { sendEmail } from '@/lib/email';
 
 export async function POST(req, { params }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(req, authOptions);
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Unauthorized' },

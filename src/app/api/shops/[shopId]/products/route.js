@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import connectDB from '@/lib/mongodb';
+import { connectDB } from '@/lib/mongodb';
+import { authOptions } from '@/lib/auth';
 import Shop from '@/models/Shop';
 import Product from '@/models/Product';
 
@@ -37,7 +38,7 @@ export async function GET(request, { params }) {
 // POST /api/shops/[shopId]/products - Create a new product
 export async function POST(request, { params }) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(request, authOptions);
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },
