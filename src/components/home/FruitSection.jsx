@@ -175,12 +175,21 @@ export default function FruitSection() {
                 <Link href={`/products/${fruit._id}`}>
                   <div className="relative h-56 w-full">
                     <Image
-                      src={fruit.imageUrl || `/images/products/fruits/${fruit.name.toLowerCase()}.jpg`}
+                      src={fruit.imageUrl || `/images/products/fruits/${fruit.name.toLowerCase().replace(/\s+/g, '-')}.jpg`}
                       alt={fruit.name}
                       fill
                       className="object-cover"
                       onError={(e) => {
-                        e.target.src = '/images/products/default-product.jpg';
+                        // Try alternative image path formats
+                        const imageName = fruit.name.toLowerCase();
+                        // Try with underscores
+                        e.target.src = `/images/products/fruits/${imageName.replace(/\s+/g, '_')}.jpg`;
+                        // Set up another error handler for the fallback
+                        e.onerror = () => {
+                          e.target.src = '/images/products/default-product.jpg';
+                          // Remove the error handler to prevent infinite loops
+                          e.target.onerror = null;
+                        };
                       }}
                     />
                     {/* Wishlist button */}

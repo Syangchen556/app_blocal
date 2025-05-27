@@ -1,4 +1,9 @@
-import { GET, POST } from "../../../../lib/auth";
+import NextAuth from "../../../../lib/auth";
 
-// In NextAuth v5, we export the handlers directly from the auth configuration
-export { GET, POST };
+// NextAuth v4 handler for App Router
+export const GET = NextAuth;
+export const POST = NextAuth;
+
+// This is required for App Router in NextAuth v4
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';

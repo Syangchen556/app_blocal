@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getServerSession, authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
 
 // GET /api/admin/settings
 export async function GET(req) {
   try {
-    const session = await auth();
+    const session = await getServerSession(req, null, authOptions);
 
     if (!session || session.user.role.toUpperCase() !== 'ADMIN') {
       return NextResponse.json(
@@ -65,7 +65,7 @@ export async function GET(req) {
 // PUT /api/admin/settings
 export async function PUT(req) {
   try {
-    const session = await auth();
+    const session = await getServerSession(req, null, authOptions);
 
     if (!session || session.user.role.toUpperCase() !== 'ADMIN') {
       return NextResponse.json(

@@ -1,18 +1,19 @@
 import { NextResponse } from 'next/server';
 
-import { auth } from 'next-auth';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 import { connectDB } from '@/lib/mongodb';
 import Blog from '@/models/Blog';
 
 // POST /api/blogs/[blogId]/comments - Add a comment
 export async function POST(request, { params }) {
-  const session = await auth();
+  const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -62,7 +63,7 @@ export async function POST(request, { params }) {
 // DELETE /api/blogs/[blogId]/comments/[commentId] - Delete a comment
 export async function DELETE(request, { params }) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },

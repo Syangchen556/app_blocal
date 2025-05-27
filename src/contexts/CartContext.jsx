@@ -5,14 +5,23 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 
+// CartContext provides cart state and actions throughout the app
 const CartContext = createContext();
 
+/**
+ * CartProvider wraps the app and provides cart state, business logic, and actions.
+ * - Fetches cart from backend on login/session change.
+ * - Exposes add, remove, update, and clear cart functions.
+ * - Handles UI notifications via toast.
+ * - (Optional: Add localStorage sync for guest users if needed.)
+ */
 export function CartProvider({ children }) {
   const [cart, setCart] = useState({ items: [], total: 0 });
   const [loading, setLoading] = useState(true);
   const { data: session } = useSession();
   const router = useRouter();
 
+  // Fetch cart from backend when user session changes
   useEffect(() => {
     if (session) {
       fetchCart();
@@ -22,6 +31,10 @@ export function CartProvider({ children }) {
     }
   }, [session]);
 
+  /**
+   * Fetch the cart from the backend API and update context state.
+   * Fetches product details for each item if necessary.
+   */
   const fetchCart = async () => {
     try {
       setLoading(true);
@@ -88,6 +101,10 @@ export function CartProvider({ children }) {
     }
   };
 
+  /**
+   * Add a product to the cart (calls backend API).
+   * Notifies user on success/failure and refreshes cart state.
+   */
   const addToCart = async (product) => {
     if (!session) {
       toast.error('Please login to add items to cart');
@@ -134,6 +151,10 @@ export function CartProvider({ children }) {
     }
   };
 
+  /**
+   * Remove a product from the cart by productId (calls backend API).
+   * Notifies user and refreshes cart state.
+   */
   const removeFromCart = async (productId) => {
     try {
       const response = await fetch('/api/cart', {
@@ -155,6 +176,10 @@ export function CartProvider({ children }) {
     }
   };
 
+  /**
+   * Update the quantity of a cart item (calls backend API).
+   * Notifies user and refreshes cart state.
+   */
   const updateQuantity = async (productId, quantity) => {
     try {
       const response = await fetch('/api/cart', {
@@ -176,6 +201,10 @@ export function CartProvider({ children }) {
     }
   };
 
+  /**
+   * Clear all items from the cart (calls backend API).
+   * Notifies user and resets local cart state.
+   */
   const clearCart = async () => {
     try {
       const response = await fetch('/api/cart', {
@@ -199,6 +228,9 @@ export function CartProvider({ children }) {
   };
 
   // Helper function to get product image path
+  /**
+   * Helper: Get fallback image path for a product based on category/name.
+   */
   const getProductImagePath = (product) => {
     if (!product) return '/images/products/default-product.jpg';
     
@@ -212,6 +244,9 @@ export function CartProvider({ children }) {
     return `/images/products/${categoryFolder}/${imageName}.jpg`;
   };
   
+  /**
+   * Helper: Calculate total price of all cart items.
+   */
   const calculateCartTotal = (items) => {
     if (!items || !Array.isArray(items)) return 0;
     return items.reduce((total, item) => {
@@ -224,11 +259,15 @@ export function CartProvider({ children }) {
     }, 0);
   };
   
+  /**
+   * Get the current total from context state.
+   */
   const getCartTotal = () => {
     return cart.total || 0;
   };
 
   // Update cart total whenever cart items change
+  // Recalculate total whenever cart items change
   useEffect(() => {
     if (cart.items && Array.isArray(cart.items)) {
       const total = calculateCartTotal(cart.items);
@@ -251,6 +290,10 @@ export function CartProvider({ children }) {
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
+/**
+ * Custom hook: useCart
+ * Access cart state and actions from anywhere in the app.
+ */
 export function useCart() {
   const context = useContext(CartContext);
   if (context === undefined) {

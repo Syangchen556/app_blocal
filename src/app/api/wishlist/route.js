@@ -1,150 +1,114 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { dbConnect } from '@/lib/mongodb';
-import Wishlist from '@/models/Wishlist';
-import User from '@/models/User';
-import mongoose from 'mongoose';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { connectDB } from '@/lib/mongodb';
 
-// Get user's wishlist
+// GET /api/wishlist - Get user's wishlist
 export async function GET(req) {
   try {
-    const session = await auth();
+    // Authenticate user
+    const session = await getServerSession(req, null, authOptions);
+    if (!session || !session.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Connect to database
+    const db = await connectDB();
+    const userId = session.user.id;
     
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    await dbConnect();
-
-    // Handle both ObjectId and email-based user IDs
-    let userId = session.user.id;
-    let userQuery;
+    // Fetch wishlist
+    const wishlist = await db.collection('wishlists').findOne({ userId });
     
-    // Check if the ID is a valid ObjectId
-    if (mongoose.Types.ObjectId.isValid(userId)) {
-      userQuery = { _id: userId };
-    } else {
-      // If not a valid ObjectId, assume it's an email (for test accounts)
-      userQuery = { email: userId };
-      
-      // Try to find the user by email
-      const user = await User.findOne(userQuery);
-      if (user) {
-        userId = user._id;
-      } else {
-        // For test accounts that don't exist in the database yet
-        // Create a temporary wishlist with the email as a string identifier
-        return NextResponse.json({
-          items: []
-        });
-      }
-    }
-
-    let wishlist = await Wishlist.findOne({ user: userId })
-      .populate({
-        path: 'items.product',
-        select: 'name description price imageUrl shop',
-        populate: {
-          path: 'shop',
-          select: 'name'
-        }
-      });
-
-    if (!wishlist) {
-      // Only create a new wishlist if we have a valid user ID
-      if (mongoose.Types.ObjectId.isValid(userId)) {
-        wishlist = await Wishlist.create({
-          user: userId,
-          items: []
-        });
-      } else {
-        // Return an empty wishlist for test accounts
-        wishlist = { items: [] };
-      }
-    }
-
-    return NextResponse.json(wishlist);
+    // Return wishlist data
+    return NextResponse.json({ 
+      items: wishlist?.items || [],
+      _id: wishlist?._id || null
+    });
   } catch (error) {
-    console.error('Error fetching wishlist:', error);
-    return NextResponse.json(
-      { error: 'Error fetching wishlist' },
-      { status: 500 }
-    );
+    console.error('Error in GET /api/wishlist:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
-// Add or remove item from wishlist
+// POST /api/wishlist - Add/remove from wishlist
 export async function POST(req) {
   try {
-    const session = await auth();
+    // Authenticate user
+    const session = await getServerSession(req, null, authOptions);
+    if (!session || !session.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Parse request body safely
+    let body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
+    const { productId, action } = body;
     
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const { productId, action } = await req.json();
-
+    // Validate input
     if (!productId) {
-      return NextResponse.json(
-        { error: 'Product ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
+    }
+    
+    if (!action || (action !== 'add' && action !== 'remove')) {
+      return NextResponse.json({ error: 'Valid action (add/remove) is required' }, { status: 400 });
     }
 
-    await dbConnect();
-
-    let wishlist = await Wishlist.findOne({ user: session.user.id });
-
+    // Connect to database
+    const db = await connectDB();
+    const userId = session.user.id;
+    
+    // Get or create wishlist
+    let wishlist = await db.collection('wishlists').findOne({ userId });
+    
     if (!wishlist) {
-      wishlist = new Wishlist({
-        user: session.user.id,
+      // Create empty wishlist if it doesn't exist
+      const result = await db.collection('wishlists').insertOne({
+        userId,
         items: []
       });
+      wishlist = { _id: result.insertedId, userId, items: [] };
     }
 
-    if (action === 'remove') {
-      // Remove item from wishlist
-      wishlist.items = wishlist.items.filter(
-        item => item.product.toString() !== productId
-      );
+    // Ensure items array exists
+    if (!wishlist.items) {
+      wishlist.items = [];
+    }
+
+    if (action === 'add') {
+      // Check if item already exists
+      const existingItem = wishlist.items.find(item => item.productId === productId);
+      
+      if (!existingItem) {
+        // Add to wishlist
+        await db.collection('wishlists').updateOne(
+          { userId },
+          { $push: { items: { productId, addedAt: new Date() } } }
+        );
+      }
+      
+      return NextResponse.json({ 
+        message: 'Product added to wishlist',
+        success: true
+      });
     } else {
-      // Add item to wishlist if it doesn't exist
-      const exists = wishlist.items.some(item => 
-        item.product.toString() === productId
+      // Remove from wishlist
+      await db.collection('wishlists').updateOne(
+        { userId },
+        { $pull: { items: { productId } } }
       );
-
-      if (!exists) {
-        wishlist.items.push({
-          product: productId,
-          addedAt: new Date()
-        });
-      }
+      
+      return NextResponse.json({ 
+        message: 'Product removed from wishlist',
+        success: true
+      });
     }
-
-    await wishlist.save();
-
-    // Populate the product details before sending response
-    await wishlist.populate({
-      path: 'items.product',
-      select: 'name description price imageUrl shop',
-      populate: {
-        path: 'shop',
-        select: 'name'
-      }
-    });
-
-    return NextResponse.json(wishlist);
   } catch (error) {
-    console.error('Error updating wishlist:', error);
-    return NextResponse.json(
-      { error: 'Error updating wishlist' },
-      { status: 500 }
-    );
+    console.error('Error in POST /api/wishlist:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
-} 
+}

@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { connectDB } from '@/lib/mongodb';
 import mongoose from 'mongoose';
 
 export async function POST(request) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     
     // Check if user is authenticated
     if (!session) {

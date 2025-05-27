@@ -23,8 +23,14 @@ const ProductCard = ({ product }) => {
 
   // Get the correct image path based on category
   const getImagePath = () => {
+    // First check if product has a media image
     if (product.media?.mainImage) {
       return product.media.mainImage;
+    }
+
+    // Then check if product has an imageUrl
+    if (product.imageUrl) {
+      return product.imageUrl;
     }
     
     // Determine category folder (fruits or vegetables)
@@ -32,11 +38,20 @@ const ProductCard = ({ product }) => {
     const validCategories = ['fruits', 'vegetables'];
     const categoryFolder = validCategories.includes(category) ? category : 'vegetables';
     
-    // Generate image path with fallback
-    const imageName = product.name.toLowerCase().replace(/\s+/g, '-');
-    const imagePath = `/images/products/${categoryFolder}/${imageName}.jpg`;
+    // Generate image path with multiple format options
+    const imageName = product.name.toLowerCase();
     
-    return imagePath;
+    // Format 1: hyphenated (e.g., bell-pepper.jpg)
+    const hyphenPath = `/images/products/${categoryFolder}/${imageName.replace(/\s+/g, '-')}.jpg`;
+    
+    // Format 2: underscored (e.g., bell_pepper.jpg)
+    const underscorePath = `/images/products/${categoryFolder}/${imageName.replace(/\s+/g, '_')}.jpg`;
+    
+    // Format 3: no spaces (e.g., bellpepper.jpg)
+    const noSpacePath = `/images/products/${categoryFolder}/${imageName.replace(/\s+/g, '')}.jpg`;
+    
+    // We'll return the hyphenated path, and handle fallbacks in the onError event
+    return hyphenPath;
   };
 
   // Check if product is in wishlist
@@ -161,7 +176,7 @@ const ProductCard = ({ product }) => {
             </div>
           </div>
         )}
-        <div className="relative h-48 w-full group">
+        <div className="relative h-48 md:h-56 w-full">
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
@@ -171,12 +186,34 @@ const ProductCard = ({ product }) => {
             src={getImagePath()}
             alt={product.name}
             fill
-            className={`object-cover transition-transform duration-300 group-hover:scale-110 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className={`object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
             onLoad={() => setIsLoading(false)}
             onError={(e) => {
-              e.target.src = '/images/products/default-product.jpg';
-              setIsLoading(false);
+              // Try alternative image formats in sequence
+              const categoryFolder = (product.category?.main?.toLowerCase() === 'fruits') ? 'fruits' : 'vegetables';
+              const imageName = product.name.toLowerCase();
+              
+              // Try underscore format
+              const underscorePath = `/images/products/${categoryFolder}/${imageName.replace(/\s+/g, '_')}.jpg`;
+              e.target.src = underscorePath;
+              
+              // Set up handler for if underscore format fails
+              e.onerror = () => {
+                // Try no spaces format
+                const noSpacePath = `/images/products/${categoryFolder}/${imageName.replace(/\s+/g, '')}.jpg`;
+                e.target.src = noSpacePath;
+                
+                // Set up handler for if no spaces format fails
+                e.onerror = () => {
+                  // Finally fall back to default image
+                  e.target.src = '/images/products/default-product.jpg';
+                  e.target.onerror = null; // Prevent infinite loop
+                  setIsLoading(false);
+                };
+              };
             }}
+            priority={false}
           />
           {/* Wishlist button */}
           <button 

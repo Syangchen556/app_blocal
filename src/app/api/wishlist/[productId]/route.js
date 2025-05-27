@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { dbConnect } from '@/lib/mongodb';
 import Wishlist from '@/models/Wishlist';
 import User from '@/models/User';
@@ -7,7 +8,7 @@ import mongoose from 'mongoose';
 
 export async function DELETE(req, { params }) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     
     if (!session) {
       return NextResponse.json(

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth } from 'next-auth';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { connectDB } from '@/lib/mongodb';
 import Shop from '@/models/Shop';
 import Product from '@/models/Product';
@@ -7,7 +8,7 @@ import Order from '@/models/Order';
 
 export async function GET(request, { params }) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     await connectDB();
     
     const shop = await Shop.findById(params.shopId)
@@ -62,7 +63,7 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -126,7 +127,7 @@ export async function PUT(request, { params }) {
 // Delete shop by ID (Admin only)
 export async function DELETE(req, { params }) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Unauthorized' },

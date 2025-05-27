@@ -1,9 +1,10 @@
 import bcrypt from 'bcryptjs';
 import NextAuth from 'next-auth';
-import { MongoClient } from 'mongodb';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import { MongoClient } from 'mongodb';
+import { getServerSession as nextAuthGetServerSession } from "next-auth/next";
 
-// Auth configuration that can be used with both NextAuth v5 and getServerSession
+// Auth configuration that can be used with NextAuth v4
 export const authOptions = {
   providers: [
     CredentialsProvider({
@@ -128,17 +129,23 @@ export const authOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
+      // Initial sign in
       if (user) {
         token.id = user.id || user._id?.toString();
+        token.email = user.email;
+        token.name = user.name;
         token.role = (user.role || '').trim().toUpperCase();
-        token.isActive = user.isActive;
+        token.isActive = user.isActive !== false; // Default to active if not specified
       }
       return token;
     },
     async session({ session, token }) {
-      if (token) {
+      // Send properties to the client
+      if (token && session.user) {
         session.user.id = token.id;
+        session.user.email = token.email;
+        session.user.name = token.name;
         session.user.role = (token.role || '').trim().toUpperCase();
         session.user.isActive = token.isActive;
       }
@@ -153,14 +160,14 @@ export const authOptions = {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  debug: process.env.NODE_ENV === 'development',
   secret: process.env.NEXTAUTH_SECRET || 'dev-secret',
 };
 
-// NextAuth v5 configuration
-export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth(authOptions);
+// NextAuth v4 default export
+export default NextAuth(authOptions);
 
-// For compatibility with older API routes
-// NextAuth v5 doesn't export getServerSession directly, so we create a wrapper function
-export const getServerSession = async () => {
-  return await auth();
+// Helper function for getServerSession that works with Next.js API routes
+export const getServerSession = async (req, res, options = authOptions) => {
+  return await nextAuthGetServerSession(req, res, options);
 };

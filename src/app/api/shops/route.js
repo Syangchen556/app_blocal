@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { dbConnect } from '@/lib/mongodb';
 import Shop from '@/models/Shop';
 import User from '@/models/User';
@@ -36,7 +37,7 @@ function validateShopData(data) {
 // GET /api/shops - Get all shops (filtered by user role)
 export async function GET(request) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     await dbConnect();
     
     const query = {};
@@ -84,7 +85,7 @@ export async function GET(request) {
 // POST /api/shops - Create a new shop
 export async function POST(request) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -228,7 +229,7 @@ export async function POST(request) {
 // DELETE /api/shops - Delete a shop
 export async function DELETE(request) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },

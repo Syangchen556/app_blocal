@@ -208,14 +208,22 @@ function WishlistItems() {
   );
 }
 
+/**
+ * BuyerDashboard - Main dashboard for buyers.
+ * - Fetches and displays order history and frequent products for the logged-in buyer.
+ * - Uses a single 'orders' state variable for all order data (shared, not duplicated).
+ * - All data fetching and business logic is separated from UI rendering.
+ */
 export default function BuyerDashboard() {
   const { data: session } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  // Shared order state for the buyer dashboard (do not duplicate elsewhere)
   const [orders, setOrders] = useState([]);
   const [frequentProducts, setFrequentProducts] = useState([]);
   const [toast, setToast] = useState(null);
 
+  // On session change, redirect unauthorized users and fetch all buyer data
   useEffect(() => {
     if (!session) {
       router.push('/auth/signin');
@@ -231,6 +239,10 @@ export default function BuyerDashboard() {
     fetchFrequentProducts();
   }, [session, router]);
 
+  /**
+   * Fetch all orders for the current buyer from the backend API.
+   * Updates the shared 'orders' state.
+   */
   const fetchOrderHistory = async () => {
     try {
       const response = await fetch('/api/orders/buyer');
@@ -247,6 +259,9 @@ export default function BuyerDashboard() {
     }
   };
 
+  /**
+   * Fetch frequently ordered products for the current buyer.
+   */
   const fetchFrequentProducts = async () => {
     try {
       const response = await fetch('/api/orders/buyer/frequent-products');

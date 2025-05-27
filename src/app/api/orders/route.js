@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
 // Get orders for the current user
 export async function GET(req) {
   try {
-    const session = await auth(req);
+    const session = await getServerSession(req, null, authOptions);
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -27,7 +28,7 @@ export async function GET(req) {
 // Create a new order
 export async function POST(req) {
   try {
-    const session = await auth();
+    const session = await getServerSession(req, null, authOptions);
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -72,7 +73,7 @@ export async function POST(req) {
 // Update order status
 export async function PUT(req) {
   try {
-    const session = await auth();
+    const session = await getServerSession(req, null, authOptions);
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

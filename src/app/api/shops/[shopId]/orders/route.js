@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth } from 'next-auth';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { connectDB } from '@/lib/mongodb';
 import Order from '@/models/Order';
 import Shop from '@/models/Shop';
@@ -7,7 +8,7 @@ import Shop from '@/models/Shop';
 // GET /api/shops/[shopId]/orders - Get shop's orders
 export async function GET(request, { params }) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -57,7 +58,7 @@ export async function GET(request, { params }) {
 // PUT /api/shops/[shopId]/orders/[orderId] - Update order status
 export async function PUT(request, { params }) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },

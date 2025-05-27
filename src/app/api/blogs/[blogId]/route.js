@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth } from 'next-auth';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 import { connectDB } from '@/lib/mongodb';
 import Blog from '@/models/Blog';
@@ -43,7 +44,7 @@ export async function GET(request, { params }) {
 // PUT /api/blogs/[blogId] - Update a blog
 export async function PUT(request, { params }) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -118,7 +119,7 @@ export async function PUT(request, { params }) {
 // DELETE /api/blogs/[blogId] - Delete a blog
 export async function DELETE(request, { params }) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },

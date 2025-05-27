@@ -92,7 +92,7 @@ export function WishlistProvider({ children }) {
       const response = await fetch('/api/wishlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId }),
+        body: JSON.stringify({ productId, action: 'add' }),
       });
       
       if (!response.ok) {
