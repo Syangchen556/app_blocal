@@ -4,28 +4,23 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { MongoClient } from 'mongodb';
 import { getServerSession } from 'next-auth/next';
 
-// Authentication utilities for API routes
 export const auth = {
-  // Check if user is authenticated
   isAuthenticated: async (request) => {
     const session = await getServerSession(request, null, authOptions);
     return !!session?.user;
   },
   
-  // Check if user has admin role
   isAdmin: async (request) => {
     const session = await getServerSession(request, null, authOptions);
     return session?.user?.role === 'ADMIN';
   },
   
-  // Get current user information
   getCurrentUser: async (request) => {
     const session = await getServerSession(request, null, authOptions);
     return session?.user || null;
   }
 };
 
-// Auth configuration that can be used with NextAuth v4
 export const authOptions = {
   providers: [
     CredentialsProvider({
@@ -40,7 +35,6 @@ export const authOptions = {
           return null;
         }
 
-        // Define test accounts for development/testing
         const testAccounts = {
           'admin@blocal.bt': { 
             password: 'admin123', 
@@ -59,15 +53,12 @@ export const authOptions = {
           }
         };
 
-        // Check if this is a test account
         if (testAccounts[credentials.email]) {
           const testAccount = testAccounts[credentials.email];
           
-          // Verify password for test account
           if (credentials.password === testAccount.password) {
             console.log('Authenticated test account:', credentials.email);
             
-            // Return a user object for the session
             return {
               id: credentials.email,
               email: credentials.email,
@@ -80,9 +71,7 @@ export const authOptions = {
           }
         }
         
-        // For non-test accounts, try to use the database
         try {
-          // Get MongoDB URI from environment variables
           const uri = process.env.MONGODB_URI;
           if (!uri) {
             console.error('MONGODB_URI not found in environment variables');
@@ -96,23 +85,18 @@ export const authOptions = {
             connectTimeoutMS: 30000
           });
           
-          // Try to access the database, but handle it gracefully if it fails
           let user = null;
           try {
-            // Connect to MongoDB
             await client.connect();
             console.log('Connected to MongoDB successfully for auth');
             
-            // Get database and users collection
             const db = client.db();
             user = await db.collection('users').findOne({ email: credentials.email });
             
-            // Close the connection
             await client.close();
             console.log('MongoDB connection closed after auth check');
           } catch (dbError) {
             console.error('Database error when finding user:', dbError);
-            // Try to close the connection if it was opened
             try {
               await client.close();
             } catch (closeError) {
@@ -128,7 +112,6 @@ export const authOptions = {
 
           console.log('Attempting to verify password for:', credentials.email);
           
-          // Try normal password verification
           const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password);
 
           if (!isPasswordCorrect) {
@@ -151,18 +134,16 @@ export const authOptions = {
   ],
   callbacks: {
     async jwt({ token, user, account }) {
-      // Initial sign in
       if (user) {
         token.id = user.id || user._id?.toString();
         token.email = user.email;
         token.name = user.name;
         token.role = (user.role || '').trim().toUpperCase();
-        token.isActive = user.isActive !== false; // Default to active if not specified
+        token.isActive = user.isActive !== false;
       }
       return token;
     },
     async session({ session, token }) {
-      // Send properties to the client
       if (token && session.user) {
         session.user.id = token.id;
         session.user.email = token.email;
@@ -185,7 +166,6 @@ export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET || 'dev-secret',
 };
 
-// Create the auth handlers for Next.js App Router
 export const handlers = NextAuth(authOptions);
 
 // Helper function to get the server session

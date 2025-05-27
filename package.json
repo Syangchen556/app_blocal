@@ -24,6 +24,7 @@
     "dotenv": "^16.5.0",
     "framer-motion": "^12.12.2",
     "glob": "^11.0.2",
+    "lucide-react": "latest",
     "module-alias": "^2.2.3",
     "mongodb": "^6.16.0",
     "mongoose": "^8.1.3",
